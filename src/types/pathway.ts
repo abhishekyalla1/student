@@ -1,8 +1,32 @@
 /**
  * Pathway - Indian Student Career Roadmap Type Definitions
+ * Authoritative statutory schema for Indian higher secondary & undergraduate education.
  */
 
 export type EvidenceLevel = 'OFFICIAL' | 'STRONGLY_SUPPORTED' | 'THIRD_PARTY' | 'UNCERTAIN';
+
+export type VerificationStatus = 'DRAFT' | 'UNDER_REVIEW' | 'VERIFIED' | 'PUBLISHED' | 'ARCHIVED';
+
+export type TimingWindowType = 
+  | 'CURRENT_VERIFIED_WINDOW'
+  | 'TYPICAL_ANNUAL_WINDOW'
+  | 'NOT_YET_ANNOUNCED'
+  | 'INSTITUTION_SPECIFIC'
+  | 'UNKNOWN';
+
+export interface EvidenceRecord {
+  ruleId: string;
+  evidenceLevel: EvidenceLevel;
+  sourceName: string;
+  sourceUrl?: string;
+  sourceType: 'GAZETTE' | 'REGULATORY_HANDBOOK' | 'OFFICIAL_PORTAL' | 'COURT_ORDER' | 'STATUTORY_NOTIFICATION';
+  jurisdiction: 'NATIONAL' | 'ANDHRA_PRADESH' | 'TELANGANA' | 'CENTRAL' | 'STATE';
+  publishedDate?: string;
+  effectiveFrom?: string;
+  effectiveUntil?: string;
+  lastVerified: string;
+  verificationStatus: VerificationStatus;
+}
 
 export type NodeState = 'COMPLETED' | 'YOU_ARE_HERE' | 'NEXT_STEP' | 'LOCKED' | 'ALTERNATIVE' | 'AVAILABLE';
 
@@ -31,6 +55,7 @@ export interface SubjectStream {
   doorsClosed: string[];
   evidenceLevel: EvidenceLevel;
   sourceCitation: string;
+  evidence?: EvidenceRecord;
 }
 
 export interface EntranceExam {
@@ -45,9 +70,13 @@ export interface EntranceExam {
   eligibilityDescription: string;
   typicalMonthWindow: string; // e.g., 'April - May'
   examFrequency: string; // e.g., 'Twice a year (Jan & April)'
+  timingType?: TimingWindowType;
   officialPortal: string;
   evidenceLevel: EvidenceLevel;
   sourceCitation: string;
+  evidence?: EvidenceRecord;
+  currentYearStatus?: 'CURRENT_VERIFIED' | 'TYPICAL_WINDOW';
+  counsellingWindow?: string;
 }
 
 export interface DegreeCourse {
@@ -68,6 +97,7 @@ export interface DegreeCourse {
   evidenceLevel: EvidenceLevel;
   sourceCitation: string;
   sourceUrl?: string;
+  evidence?: EvidenceRecord;
 }
 
 export interface JobRole {
@@ -88,6 +118,7 @@ export interface JobRole {
     seniorRange: string;
     source: string;
   };
+  evidence?: EvidenceRecord;
 }
 
 export interface CareerTransition {
@@ -95,10 +126,34 @@ export interface CareerTransition {
   currentBackground: string;
   targetTransitionPath: string;
   feasibilityLevel: 'Direct / High' | 'Moderate' | 'High (Alternate)' | 'Not Eligible / Restricted';
+  transitionStatus?: EligibilityStatus;
   requirementsBridging: string;
   statutoryRuleExplanation: string;
   evidenceLevel: EvidenceLevel;
   sourceCitation: string;
+  evidence?: EvidenceRecord;
+}
+
+export type EligibilityStatus = 
+  | 'ELIGIBLE' 
+  | 'POSSIBLE_WITH_BRIDGING' 
+  | 'ALTERNATIVE_PLAN_B'
+  | 'STATUTORILY_RESTRICTED' 
+  | 'UNKNOWN';
+
+export interface EligibilityEvaluation {
+  status: EligibilityStatus;
+  badgeLabel: string;
+  reason: string;
+  summary: string;
+  statutoryBasis: string;
+  requirementsSatisfied: string[];
+  requirementsMissing: string[];
+  nextAction: string;
+  alternatives: string[];
+  bridgingOptions: string[];
+  evidence: EvidenceRecord[];
+  bridgingRecommendation?: string;
 }
 
 export interface PathwayNode {
@@ -111,6 +166,8 @@ export interface PathwayNode {
   lockReason?: string;
   subtitle?: string;
   iconType?: string;
+  completed?: boolean;
+  eligibility?: EligibilityEvaluation;
   dataRef?: {
     type: 'STREAM' | 'EXAM' | 'COURSE' | 'JOB' | 'STAGE' | 'BRIDGE';
     id: string;
@@ -120,12 +177,14 @@ export interface PathwayNode {
     whyItMatters: string;
     mandatoryRequirements: string;
     whenToDoIt: string;
+    timingType?: TimingWindowType;
     nextStep: string;
     alternativeRoute: string;
     realityCheck?: string;
     evidenceLevel: EvidenceLevel;
     sourceCitation: string;
     officialUrl?: string;
+    evidenceRecord?: EvidenceRecord;
   };
 }
 
@@ -159,9 +218,12 @@ export interface UserProfile {
   currentDegreeId?: string;
   parentMode: boolean;
   language: LanguageCode;
+  completedStepIds?: string[];
+  schemaVersion?: number;
 }
 
 export interface PathComparisonData {
+  id?: string;
   pathA: {
     title: string;
     courseId: string;
@@ -189,4 +251,5 @@ export interface PathComparisonData {
     risks: string[];
   };
   verdict: string;
+  evidence?: EvidenceRecord;
 }

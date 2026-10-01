@@ -764,7 +764,8 @@ export function generateForwardRoadmap(profile: UserProfile): PathwayGraph {
 }
 
 export function generateBackwardRoadmap(targetJobId: string, currentStage: string = 'CLASS_10'): PathwayGraph {
-  const job = JOB_ROLES_DATA.find(j => j.id === targetJobId) || JOB_ROLES_DATA[0];
+  const resolvedTargetJobId = targetJobId === 'DOCTOR' ? 'DOCTOR_PHYSICIAN' : targetJobId;
+  const job = JOB_ROLES_DATA.find(j => j.id === resolvedTargetJobId || j.id === targetJobId) || JOB_ROLES_DATA[0];
   const primaryDegree = DEGREE_COURSES_DATA.find(d => job.entryDegreePaths.includes(d.id)) || DEGREE_COURSES_DATA[0];
   const primaryExam = ENTRANCE_EXAMS_DATA.find(e => primaryDegree.entranceExams.includes(e.id)) || ENTRANCE_EXAMS_DATA[0];
   const streamCode = job.directStreams[0] || 'MPC';

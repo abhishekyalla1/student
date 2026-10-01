@@ -12,12 +12,48 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const port = process.env.PORT || 3000;
 
-app.use(express.json());
+app.use(express.json({ limit: '1mb' }));
+
+// In-memory sliding window rate limiter
+const requestCounts = new Map<string, { count: number; resetTime: number }>();
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 30;
+
+function rateLimiter(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const ip = req.ip || req.socket.remoteAddress || 'unknown-ip';
+  const now = Date.now();
+  const clientRecord = requestCounts.get(ip);
+
+  if (!clientRecord || now > clientRecord.resetTime) {
+    requestCounts.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW_MS });
+    return next();
+  }
+
+  if (clientRecord.count >= MAX_REQUESTS_PER_WINDOW) {
+    return res.status(429).json({
+      success: false,
+      error: 'Too many requests. Please wait a moment before asking again.'
+    });
+  }
+
+  clientRecord.count++;
+  return next();
+}
 
 // API endpoint for grounded AI pathway explanation
-app.post('/api/explain-path', async (req, res) => {
+app.post('/api/explain-path', rateLimiter, async (req, res) => {
   try {
     const { context, question, language = 'English' } = req.body;
+
+    // Input sanitization & boundary check
+    if (!context || typeof context !== 'object') {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid request: context object is required.'
+      });
+    }
+
+    const sanitizedQuestion = typeof question === 'string' ? question.slice(0, 500) : '';
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
@@ -45,7 +81,7 @@ CRITICAL INTEGRITY INSTRUCTIONS:
 ${JSON.stringify(context, null, 2)}
 
 User Question / Guidance Request:
-${question || 'Explain this educational pathway clearly, including what subjects matter, what doors remain open or closed, the reality check for landing a job, and what alternative Plan-B routes exist.'}`;
+${sanitizedQuestion || 'Explain this educational pathway clearly, including what subjects matter, what doors remain open or closed, the reality check for landing a job, and what alternative Plan-B routes exist.'}`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3.8-flash',
@@ -68,8 +104,27 @@ ${question || 'Explain this educational pathway clearly, including what subjects
   }
 });
 
+// Content versioning & synchronization endpoint
+app.get('/api/content-version', (_req, res) => {
+  res.json({
+    version: '2.4.0',
+    publishedAt: '2026-10-01',
+    regulatoryFrameworks: [
+      'AICTE Approval Process Handbook 2024-25',
+      'National Medical Commission (NMC) NEET-UG Regulations',
+      'University Grants Commission (UGC) Minimum Standards',
+      'Board of Intermediate Education AP (BIEAP)',
+      'Telangana State Board of Intermediate Education (TSBIE)',
+      'Bar Council of India (BCI) Legal Education Rules',
+      'Institute of Chartered Accountants of India (ICAI)'
+    ],
+    status: 'PUBLISHED',
+    lastAudited: '2026-10-01'
+  });
+});
+
 // Health check endpoint
-app.get('/api/health', (req, res) => {
+app.get('/api/health', (_req, res) => {
   res.json({ status: 'ok', app: 'Pathway Indian Student Career Roadmap' });
 });
 
@@ -85,7 +140,7 @@ async function startServer() {
   } else {
     // In production, serve built static assets
     app.use(express.static(path.resolve(__dirname, 'dist')));
-    app.get('*', (req, res) => {
+    app.get('*', (_req, res) => {
       res.sendFile(path.resolve(__dirname, 'dist', 'index.html'));
     });
   }

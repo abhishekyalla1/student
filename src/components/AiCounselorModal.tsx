@@ -26,20 +26,47 @@ export const AiCounselorModal: React.FC<AiCounselorModalProps> = ({
   selectedNodeContext,
   defaultLanguage
 }) => {
+  const getLangName = (code: LanguageCode): 'English' | 'Telugu' | 'Hindi' | 'Hinglish' => {
+    if (code === 'te') return 'Telugu';
+    if (code === 'hi') return 'Hindi';
+    return 'English';
+  };
+
   const [question, setQuestion] = useState('');
-  const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Telugu' | 'Hindi' | 'Hinglish'>('English');
+  const [selectedLanguage, setSelectedLanguage] = useState<'English' | 'Telugu' | 'Hindi' | 'Hinglish'>(() => getLangName(defaultLanguage));
   const [loading, setLoading] = useState(false);
   const [explanation, setExplanation] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Sync with defaultLanguage prop
+  React.useEffect(() => {
+    setSelectedLanguage(getLangName(defaultLanguage));
+  }, [defaultLanguage]);
+
   if (!isOpen) return null;
 
-  const quickQuestions = [
-    'Explain this complete pathway in simple, practical terms.',
-    'What are my realistic Plan-B options if I miss the top entrance exam cutoff?',
-    'What is the practical reality check for landing a high-paying job here?',
-    'What statutory doors permanently close if I choose this stream?'
-  ];
+  const quickQuestionsByLang: Record<string, string[]> = {
+    Telugu: [
+      'ఈ విద్యా మార్గాన్ని సరళమైన మాటల్లో వివరించండి.',
+      'నేషనల్ ఎంట్రన్స్ పరీక్ష మిస్ అయితే నాకున్న ప్లాన్-బి ప్రత్యామ్నాయాలు ఏమిటి?',
+      'మంచి ఉద్యోగం రావడానికి కాలేజీ డిగ్రీ కాకుండా ఇంకేమి నైపుణ్యాలు కావాలి?',
+      'ఈ గ్రూప్ ఎంచుకుంటే ఏయే ఉన్నత విద్య తలుపులు శాశ్వతంగా మూసుకుపోతాయి?'
+    ],
+    Hindi: [
+      'इस पूरे शैक्षणिक रोडमैप को सरल और व्यावहारिक भाषा में समझाएं।',
+      'यदि मुख्य प्रवेश परीक्षा में कटऑफ न मिले तो प्लान-बी विकल्प क्या हैं?',
+      'सॉफ्टवेयर/कोर क्षेत्र में अच्छी नौकरी पाने के लिए वास्तविक आवश्यकता क्या है?',
+      'इस स्ट्रीम को चुनने से कौन-से विकल्प स्थायी रूप से बंद हो जाते हैं?'
+    ],
+    English: [
+      'Explain this complete pathway in simple, practical terms.',
+      'What are my realistic Plan-B options if I miss the top entrance exam cutoff?',
+      'What is the practical reality check for landing a high-paying job here?',
+      'What statutory doors permanently close if I choose this stream?'
+    ]
+  };
+
+  const quickQuestions = quickQuestionsByLang[selectedLanguage] || quickQuestionsByLang.English;
 
   const handleAskQuestion = async (qText?: string) => {
     const query = qText || question;

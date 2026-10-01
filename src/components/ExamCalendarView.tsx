@@ -125,14 +125,19 @@ export const ExamCalendarView: React.FC = () => {
               {/* Annual Window Badge */}
               <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs flex items-center justify-between">
                 <div>
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">
-                    Typical Annual Window:
-                  </span>
-                  <span className="font-bold text-indigo-900">{exam.typicalMonthWindow}</span>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                      Schedule Window:
+                    </span>
+                    <span className="text-[9px] font-bold bg-amber-100 text-amber-900 border border-amber-300 px-1.5 py-0.2 rounded">
+                      {exam.currentYearStatus === 'CURRENT_VERIFIED' ? 'CURRENT VERIFIED' : 'TYPICAL ANNUAL WINDOW'}
+                    </span>
+                  </div>
+                  <span className="font-bold text-indigo-900 text-xs">{exam.typicalMonthWindow}</span>
                 </div>
                 <div className="text-right">
-                  <span className="text-[11px] text-slate-400 block">Frequency:</span>
-                  <span className="font-medium text-slate-700">{exam.examFrequency}</span>
+                  <span className="text-[10px] text-slate-400 block">Frequency:</span>
+                  <span className="font-medium text-slate-700 text-xs">{exam.examFrequency}</span>
                 </div>
               </div>
 
