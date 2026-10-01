@@ -1,0 +1,6 @@
+{
+  "name": "Pathway - Indian Student Career Roadmap",
+  "description": "Transparent, rule-backed educational pathway guide for Indian students after Class 10 and 12, mapping intermediate streams, entrance exams, degrees, and career transitions.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
